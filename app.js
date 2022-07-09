@@ -2,6 +2,7 @@ const express = require('express');
 
 require('./db');
 const userRouter = require('./routes/user');
+
 const app = express();
 app.use(express.json());
 const port = process.env.PORT || 5000;
