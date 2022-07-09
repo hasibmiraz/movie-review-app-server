@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+const { isValidObjectId } = require('mongoose');
 
 const User = require('../models/user');
 const EmailVerificationToken = require('../models/emailVerificationToken');
@@ -50,4 +51,47 @@ exports.create = async (req, res) => {
   res.status(201).json({
     message: 'Email has been sent to your email. Please verify your account!',
   });
+};
+
+exports.verifyEmail = async (req, res) => {
+  const { userId, OTP } = req.body;
+  if (!isValidObjectId(userId)) return res.json({ error: 'Invalid user' });
+
+  const user = await User.findById(userId);
+  if (!user) return res.json({ error: 'No user found!' });
+
+  if (user.isVerified) return res.json({ error: 'User is verified already!' });
+
+  const token = await EmailVerificationToken.findOne({ owner: userId });
+  if (!token) return res.json({ error: 'Token not found!' });
+
+  const isMatched = await token.compareToken(OTP);
+  if (!isMatched) return res.json({ error: 'Incorrect OTP!' });
+
+  user.isVerified = true;
+  await user.save();
+
+  EmailVerificationToken.findByIdAndDelete(token._id);
+
+  var transport = nodemailer.createTransport({
+    host: 'smtp.mailtrap.io',
+    port: 2525,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASSWORD,
+    },
+  });
+
+  transport.sendMail({
+    from: 'miraz@movie-review-app.com',
+    to: user.email,
+    subject: 'Welcome to movie review app.',
+
+    html: `
+    <h1>Welcome to movie review app</h1>    
+    <p>Thank you for opening account in moview review app.</p>
+    `,
+  });
+
+  res.json({ message: 'Your email is verified!' });
 };
