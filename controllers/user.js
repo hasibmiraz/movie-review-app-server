@@ -95,3 +95,55 @@ exports.verifyEmail = async (req, res) => {
 
   res.json({ message: 'Your email is verified!' });
 };
+
+exports.resendEmailVerification = async (req, res) => {
+  const { userId } = req.body;
+
+  const user = await User.findById(userId);
+  if (!user) return res.json({ error: 'User not found!' });
+
+  if (user && user.isVerified)
+    return res.json({ error: 'Email id is verified' });
+
+  const availableToken = await EmailVerificationToken.findOne({
+    owner: userId,
+  });
+  if (availableToken)
+    return res.json({
+      error: 'Check your email for the OTP or try again after 1 hour.',
+    });
+
+  // Generate 6 digit OTP
+  let OTP = '';
+  for (let i = 0; i <= 5; i++) {
+    const randomVal = Math.round(Math.random() * 9);
+    OTP += randomVal;
+  }
+  // Store it in the DB
+  const newEmailVerificationToken = new EmailVerificationToken({
+    owner: user._id,
+    token: OTP,
+  });
+
+  await newEmailVerificationToken.save();
+  // Send OTP to the user
+  var transport = nodemailer.createTransport({
+    host: 'smtp.mailtrap.io',
+    port: 2525,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASSWORD,
+    },
+  });
+
+  transport.sendMail({
+    from: 'hasib@imdd.com',
+    to: user.email,
+    subject: 'Verify your email',
+
+    html: `
+    <p>Your verification OTP</p>
+    <h1>${OTP}</h1>    
+    `,
+  });
+};
