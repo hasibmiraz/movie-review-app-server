@@ -38,7 +38,7 @@ exports.create = async (req, res) => {
   });
 
   transport.sendMail({
-    from: 'hasib@movie-review-app.com',
+    from: 'hasib@imdd.com',
     to: newUser.email,
     subject: 'Verify your email',
 
@@ -63,7 +63,7 @@ exports.verifyEmail = async (req, res) => {
   if (user.isVerified) return res.json({ error: 'User is verified already!' });
 
   const token = await EmailVerificationToken.findOne({ owner: userId });
-  if (!token) return res.json({ error: 'Token not found!' });
+  if (!token) return res.json({ error: 'OTP not found!' });
 
   const isMatched = await token.compareToken(OTP);
   if (!isMatched) return res.json({ error: 'Incorrect OTP!' });
@@ -83,13 +83,13 @@ exports.verifyEmail = async (req, res) => {
   });
 
   transport.sendMail({
-    from: 'miraz@movie-review-app.com',
+    from: 'miraz@imdd.com',
     to: user.email,
-    subject: 'Welcome to movie review app.',
+    subject: 'Welcome to IMDD.',
 
     html: `
-    <h1>Welcome to movie review app</h1>    
-    <p>Thank you for opening account in moview review app.</p>
+    <h1>Welcome to IMDD</h1>    
+    <p>Thank you for opening account in IMDD. Have a look at movies you have watched and rate them.</p>
     `,
   });
 

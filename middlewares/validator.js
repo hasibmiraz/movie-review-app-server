@@ -15,7 +15,6 @@ exports.userValidator = [
 exports.validate = (req, res, next) => {
   const error = validationResult(req).array();
   if (error.length) {
-    console.log(error);
     return res.json({ error: error[0].msg });
   }
   next();
