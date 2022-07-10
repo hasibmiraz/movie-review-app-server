@@ -26,7 +26,7 @@ exports.create = async (req, res) => {
 
   await newEmailVerificationToken.save();
   // Send OTP to the user
-  var transport = generateMailTransporter();
+  const transport = generateMailTransporter();
 
   transport.sendMail({
     from: 'hasib@imdd.com',
@@ -64,7 +64,7 @@ exports.verifyEmail = async (req, res) => {
 
   await EmailVerificationToken.findByIdAndDelete(token._id);
 
-  var transport = generateMailTransporter();
+  const transport = generateMailTransporter();
 
   transport.sendMail({
     from: 'miraz@imdd.com',
@@ -108,7 +108,7 @@ exports.resendEmailVerification = async (req, res) => {
 
   await newEmailVerificationToken.save();
   // Send OTP to the user
-  var transport = generateMailTransporter();
+  const transport = generateMailTransporter();
 
   transport.sendMail({
     from: 'hasib@imdd.com',
@@ -150,7 +150,7 @@ exports.forgetPassword = async (req, res) => {
 
   const resetPasswordUrl = `http://localhost:3000/reset-password?token=${token}&id=${user._id}`;
 
-  var transport = generateMailTransporter();
+  const transport = generateMailTransporter();
 
   transport.sendMail({
     from: 'security-hasib@imdd.com',
@@ -164,4 +164,41 @@ exports.forgetPassword = async (req, res) => {
   });
 
   res.json({ message: 'Check your email to reset password!' });
+};
+
+exports.sendResetPassTokenStatus = (req, res) => {
+  res.json({ valid: true });
+};
+
+exports.resetPassword = async (req, res) => {
+  const { newPassword, userId } = req.body;
+
+  const user = await User.findById(userId);
+  const matched = await user.comparePassword(newPassword);
+  if (matched)
+    return sendError(
+      res,
+      'The new password can not be the same as the old one!'
+    );
+
+  user.password = newPassword;
+  await user.save();
+
+  await PasswordResetToken.findByIdAndDelete(req.resetToken._id);
+
+  // Send OTP to the user
+  const transport = generateMailTransporter();
+
+  transport.sendMail({
+    from: 'hasib@imdd.com',
+    to: user.email,
+    subject: 'Password Reset Successful',
+
+    html: `
+    <h1>Password reset successfully</h1>
+    <p>Please login with your new password</p>
+    `,
+  });
+
+  res.json({ message: 'Password reset successfully' });
 };
