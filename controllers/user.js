@@ -38,7 +38,7 @@ exports.create = async (req, res) => {
   });
 
   transport.sendMail({
-    from: 'miraz@movie-review-app.com',
+    from: 'hasib@movie-review-app.com',
     to: newUser.email,
     subject: 'Verify your email',
 
@@ -71,7 +71,7 @@ exports.verifyEmail = async (req, res) => {
   user.isVerified = true;
   await user.save();
 
-  EmailVerificationToken.findByIdAndDelete(token._id);
+  await EmailVerificationToken.findByIdAndDelete(token._id);
 
   var transport = nodemailer.createTransport({
     host: 'smtp.mailtrap.io',
