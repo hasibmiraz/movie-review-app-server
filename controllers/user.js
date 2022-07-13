@@ -41,7 +41,11 @@ exports.create = async (req, res) => {
   });
 
   res.status(201).json({
-    message: 'Email has been sent to your email. Please verify your account!',
+    user: {
+      id: newUser._id,
+      name: newUser.name,
+      email: newUser.email,
+    },
   });
 };
 

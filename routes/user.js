@@ -9,6 +9,7 @@ const {
   resetPassword,
   signIn,
 } = require('../controllers/user');
+
 const { isValidPassResetToken } = require('../middlewares/user');
 const {
   userValidator,
